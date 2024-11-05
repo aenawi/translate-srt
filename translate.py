@@ -5,8 +5,15 @@ import argparse
 import os
 
 def translate_text_to_arabic(text):
-    # Translate using deep-translator
-    return GoogleTranslator(source='auto', target='ar').translate(text)
+    # Attempt to translate text
+    try:
+        translated_text = GoogleTranslator(source='auto', target='ar').translate(text)
+        # Fallback to original text if translation result is None or empty
+        return translated_text if translated_text else text
+    except Exception as e:
+        print(f"Translation failed for text: '{text}'\nError: {e}")
+        # Return original text if translation fails
+        return text
 
 def translate_srt_file(input_path, output_path):
     # Load .srt file
@@ -20,7 +27,7 @@ def translate_srt_file(input_path, output_path):
         # Set up progress bar
         with tqdm(total=len(subs), desc="Translating subtitles", unit="subtitle") as pbar:
             for sub in subs:
-                # Translate to Arabic
+                # Translate to Arabic with fallback
                 arabic_text = translate_text_to_arabic(sub.text)
                 
                 # Format the subtitle entry
