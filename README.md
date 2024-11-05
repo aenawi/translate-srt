@@ -1,13 +1,16 @@
 # Subtitle Translation to Arabic
 
-This project is a Python-based tool designed to seamlessly translate `.srt` subtitle files from any language into Arabic, making it easier for Arabic-speaking audiences to enjoy content from around the world. Utilizing an open-source translation library, the tool provides an efficient solution for translating entire subtitle files while ensuring proper Arabic formatting, including right-to-left (RTL) text alignment. 
+This project is a Python-based tool designed to seamlessly translate `.srt` subtitle files from any language into Arabic, making it easier for Arabic-speaking audiences to enjoy content from around the world. The tool offers two translation methods:
+1. Using Google Translate API (via deep-translator library)
+2. Using Meta's Seamless M4T v2 Large Language Model for higher quality translations
 
-Whether you’re a content creator, language enthusiast, or just need a quick way to translate subtitles, this tool offers a straightforward, flexible approach with real-time progress tracking and options to save translations to custom output paths. With this tool, you can produce professional-quality Arabic subtitles compatible with popular media players and subtitle editors. 
+Whether you're a content creator, language enthusiast, or just need a quick way to translate subtitles, this tool offers a straightforward, flexible approach with real-time progress tracking and options to save translations to custom output paths. With this tool, you can produce professional-quality Arabic subtitles compatible with popular media players and subtitle editors. 
 
 --- 
 
 ## Requirements
 
+### Basic Version (Google Translate)
 - Python 3.6 to 3.12 (This project does not support Python 3.13 or higher due to dependencies)
 - Required libraries (listed in `requirements.txt`):
   - `pysrt` for handling `.srt` files
@@ -15,15 +18,22 @@ Whether you’re a content creator, language enthusiast, or just need a quick wa
   - `tqdm` for progress bar
   - `arabic_reshaper` and `python-bidi` for proper RTL display of Arabic text
 
+### LLM Version (Seamless M4T v2)
+Additional requirements for LLM-based translation (listed in `requirements-llm.txt`):
+- `torch` and `torchaudio` for the neural network backend
+- `transformers` for handling the language model
+- `sentencepiece` for text tokenization
+- `protobuf` for model communication
+
 ## Installation
 
 ### 1. Clone the Repository
 
 Download the project files or clone the repository:
-   ```bash
-   git clone https://github.com/aenawi/translate-srt.git
-   cd translate-srt
-   ```
+```bash
+git clone https://github.com/aenawi/translate-srt.git
+cd translate-srt
+```
 
 ### 2. Set Up a Virtual Environment (Optional but Recommended)
 
@@ -32,73 +42,118 @@ Choose one of the following methods to create an isolated environment for this p
 #### Option A: Using `venv`
 
 1. **Create the Virtual Environment**:
-   ```bash
-   python3 -m venv venv
-   ```
+```bash
+python3 -m venv venv
+```
 
 2. **Activate the Virtual Environment**:
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
-   - On Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
+- On macOS/Linux:
+  ```bash
+  source venv/bin/activate
+  ```
+- On Windows:
+  ```bash
+  venv\Scripts\activate
+  ```
 
 #### Option B: Using `conda`
 
 1. **Create the Conda Environment**:
-   ```bash
-   conda create -n translate-srt python=3.12
-   ```
+```bash
+conda create -n translate-srt python=3.12
+```
 
 2. **Activate the Conda Environment**:
-   ```bash
-   conda activate translate-srt
-   ```
+```bash
+conda activate translate-srt
+```
 
 ### 3. Install Dependencies
 
-After activating your virtual environment (using either `venv` or `conda`), install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+After activating your virtual environment (using either `venv` or `conda`), install the required dependencies based on your preferred translation method:
 
-### Usage
+#### For Google Translate Version:
+```bash
+pip install -r requirements.txt
+```
+
+#### For LLM Translation Version:
+```bash
+pip install -r requirements-llm.txt
+```
+
+Note: The LLM version requires more disk space (approximately 5GB) as it downloads the Seamless M4T v2 model during first use.
+
+## Usage
 
 The tool accepts a `.srt` file for translation and outputs a translated file with the option to specify a custom output location.
 
-#### Basic Command
+### Basic Command
 
-To translate a subtitle file and save it in the current directory:
+#### Using Google Translate:
 ```bash
 python translate.py path/to/input_file.srt
 ```
 
+#### Using Seamless M4T v2 LLM:
+```bash
+python translate-llm.py path/to/input_file.srt
+```
+
 This will create an output file in the same directory as the input file with `-AR` appended to the filename.
 
-#### Specify a Custom Output Location
+### Specify a Custom Output Location
 
 Use the `-o` or `--output` option to specify a folder or custom file path:
 ```bash
 python translate.py path/to/input_file.srt -o path/to/output_directory/
 ```
+or
+```bash
+python translate-llm.py path/to/input_file.srt -o path/to/output_directory/
+```
 
 For example:
 ```bash
-python translate.py My.Movie.WEB.srt -o .
+python translate-llm.py My.Movie.WEB.srt -o .
 ```
 This will save the file in the current directory as `My.Movie.WEB-AR.srt`.
+
+## Translation Methods Comparison
+
+### Google Translate Version
+- **Advantages**:
+  - Faster translation speed
+  - Minimal system requirements
+  - No additional model downloads needed
+  - Works well for simple, straightforward content
+- **Limitations**:
+  - Quality may vary for complex sentences
+  - Requires internet connection
+  - Subject to API limitations
+
+### Seamless M4T v2 LLM Version
+- **Advantages**:
+  - Higher quality translations
+  - Better handling of context and idioms
+  - Works offline after initial model download
+  - Consistent translation quality
+- **Limitations**:
+  - Requires more system resources
+  - Initial download of ~5GB model
+  - Slower translation speed
+  - Requires a GPU for optimal performance
 
 ## Error Handling and Fallbacks
 
 This tool includes built-in error handling to ensure a smooth translation process, even if certain subtitle lines encounter issues:
 
-- **Translation Failures**: If an error occurs while translating a line (e.g., network issues), the tool will print an error message and use the original text for that line as a fallback.
-- **Empty Translations**: In cases where the translation API returns `None` or an empty string, the tool automatically falls back to the original text, ensuring that "None" or blank lines are not written to the output file.
+- **Translation Failures**: If an error occurs while translating a line (e.g., network issues or model errors), the tool will print an error message and use the original text for that line as a fallback.
+- **Empty Translations**: In cases where the translation API or model returns `None` or an empty string, the tool automatically falls back to the original text, ensuring that "None" or blank lines are not written to the output file.
   
 These mechanisms ensure that your subtitle file remains usable and intact, even if some translations cannot be processed.
+
+[Rest of the README remains the same...]
 
 ## Upcoming Features
 
